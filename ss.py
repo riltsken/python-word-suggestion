@@ -120,7 +120,7 @@ def main():
 	while 1:
 		if piped_words:
 			try:
-				given_word = piped_words.next()
+				given_word = piped_words.next().lower()
 				print "> %s" % given_word.replace('\n', '')
 			except StopIteration:
 				break
@@ -134,33 +134,44 @@ def main():
 		"""
 		with timer():
 			top3 = []
+			same_word = False
 			match = ('NO SUGGESTION',0.50)
 			for word in open("/usr/share/dict/words"):
 				w = word.replace('\n', '')
 				if w:
 					if given_word == w:
 						match = (w,1)
-						top3.append(match)
 						break
-		
-					distance = find_distance(given_word,w)
+					
+					# it is unlikely someone will write a word with both
+					# the last and first letters incorrect, speeds up algo 
+					# by a very large amount	
+					if given_word[0] == w[0] or given_word[-1] == w[-1]:
+						distance = find_distance(given_word,w)
 
-					if match[1] < distance:
-						match = (w,distance)
-
-					if len(top3) < 3:
-						top3.append((w,distance))
-					else:
-						for x in xrange(0,len(top3)):
-							if distance > top3[x][1]:
-								top3.insert(x, (w,distance))
-								top3.pop(x+1)
-								break
-		
+						if match[1] < distance:
+							match = (w,distance)
+						"""
+						if len(top3) < 3:
+							top3.append((w,distance))
+						else:
+							for x in xrange(0,len(top3)):
+								if distance > top3[x][1]:
+									top3.insert(x, (w,distance))
+									top3.pop(x+1)
+									break
+						"""
+		print match[0]
+		"""
 		top3.sort(key=lambda x: x[1],reverse=True)
-		#print match[0]
 		for t in top3:
 			print t[0],t[1]
+		"""
 
 if __name__ == "__main__":
+	try:
 		sys.exit(main())
+	except KeyboardInterrupt:
+		print # push the prompt down a line when ctrl+c
+		sys.exit(1)
+

@@ -27,9 +27,26 @@ def capitalize_char(word):
 	return word
 
 def modify_vowel(word):
-	index = random.randint(0,len(word) - 1)
+	"""
+	There is a chance that the random char we pull may not be a vowel
+	if this is the case, search the string for the first vowel we
+	find and use that one to modify
+	"""
+	index = random.randint(0,len(word) - 1) 
+	if word[index] not in VOWELS:
+		for x in range(0, len(word)):
+			if word[index].lower() in VOWELS: # sometimes the index is capitalized
+				index = x
+				break
+
+	"""
+	We also want to make sure we pick a DIFFERENT vowel than the one
+	in our vowel list
+	"""
 	if ALPHABET.match(word[index]):
-		vowel = VOWELS[random.randint(0,len(VOWELS) - 1)]
+		vowel = None
+		while vowel == None or vowel == word[index]:
+			vowel = VOWELS[random.randint(0,len(VOWELS) - 1)]
 		return replace_character(word,vowel,index)
 	return word
 
