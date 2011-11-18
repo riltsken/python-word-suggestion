@@ -127,32 +127,40 @@ def main():
 		else:
 			given_word = raw_input("> ").lower()
 
+		"""
+		Just go through each word from the dictionary through iteration
+		and pass it to the distance calculator. It goes from 0 to 1 with
+		0 being lowest and 1 being highest.
+		"""
 		with timer():
-			top10 = []
+			top3 = []
 			match = ('NO SUGGESTION',0.50)
 			for word in open("/usr/share/dict/words"):
 				w = word.replace('\n', '')
 				if w:
 					if given_word == w:
 						match = (w,1)
+						top3.append(match)
 						break
 		
 					distance = find_distance(given_word,w)
 
 					if match[1] < distance:
 						match = (w,distance)
-						if len(top10) < 10:
-							top10.append((w,distance))
-						else:
-							for x in xrange(0,len(top10)):
-								if distance > top10[x][1]:
-									top10.insert(x, (w,distance))
-									top10.pop(x+1)
+
+					if len(top3) < 3:
+						top3.append((w,distance))
+					else:
+						for x in xrange(0,len(top3)):
+							if distance > top3[x][1]:
+								top3.insert(x, (w,distance))
+								top3.pop(x+1)
+								break
 		
-		top10.sort(key=lambda x: x[1],reverse=True)
-		print match[0]
-		#for t in top10:
-		#	print t[0],t[1]
+		top3.sort(key=lambda x: x[1],reverse=True)
+		#print match[0]
+		for t in top3:
+			print t[0],t[1]
 
 if __name__ == "__main__":
 		sys.exit(main())

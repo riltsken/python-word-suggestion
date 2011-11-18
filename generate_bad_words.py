@@ -42,4 +42,5 @@ for x,word in enumerate(open('/usr/share/dict/words')):
 			word = mutators[random.randint(0,2)](word)
 		words.append(word)
 
+words[-1] = words[-1].replace('\n', '')
 print ''.join(words)
