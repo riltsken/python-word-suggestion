@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import numpy
 from datetime import datetime
@@ -112,8 +113,19 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 	return jarowinkler_score
 
 def main():
+	piped_words = None
+	if not sys.stdin.isatty():
+		piped_words = iter(sys.stdin.readlines())
+
 	while 1:
-		given_word = raw_input("> ").lower()
+		if piped_words:
+			try:
+				given_word = piped_words.next()
+				print "> %s" % given_word.replace('\n', '')
+			except StopIteration:
+				break
+		else:
+			given_word = raw_input("> ").lower()
 
 		with timer():
 			top10 = []
@@ -134,12 +146,13 @@ def main():
 						else:
 							for x in xrange(0,len(top10)):
 								if distance > top10[x][1]:
-									top10.insert(x)
+									top10.insert(x, (w,distance))
 									top10.pop(x+1)
 		
 		top10.sort(key=lambda x: x[1],reverse=True)
-		for t in top10:
-			print t[0],t[1]
+		print match[0]
+		#for t in top10:
+		#	print t[0],t[1]
 
 if __name__ == "__main__":
 		sys.exit(main())
