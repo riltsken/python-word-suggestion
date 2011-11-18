@@ -26,16 +26,16 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 		short_word = first
 		short_length = len1
 	
-
 	"""
-	we are comparing the current char from the longer string to 
-	+-3 indices in the shorter string to see if it shows up, if 
-	it does, add to the matched count
+	This compares the current char from the longer string up to 
+	+-match_distance amount of indices in the shorter string to 
+	see if it shows up, if it does, add to the matched count
 	"""
 	matches = 0
-	match_distance = long_length / 2
+	# modified from the formula, orginally (l_length / 2) - 1. I found this favored long words too much.
+	match_distance = long_length / 2 
 	for x, ch_f in enumerate(long_word):
-		if x < match_distance:
+		if x < match_distance: # can't use negative indices so catch that here
 			allowed_chars = short_word[0:x + match_distance]
 		else:	
 			allowed_chars = short_word[x - match_distance:x + match_distance]
@@ -43,6 +43,12 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 		if ch_f in allowed_chars:
 			matches += 1
 
+	"""
+	All this does is check against each vowel in the string provided by the user
+	it will then replace that vowel and compare the word to see if it matches up
+	if it does, we add a fairly strong boost to that vowel'ed word as per
+	the project constraints
+	"""
 	vowel_boost = False
 	for x,ch in enumerate(first):
 		if ch in VOWELS:
@@ -53,6 +59,11 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 				if ''.join(new_string) == second:
 					vowel_boost = True
 	
+	"""
+	Part of the jaro winkler algorithm is that mismatched pairs
+	hold a weight as well. For example, hlep -> help where
+	le and el are a mismatched pair. We count these for use later.
+	"""
 	mismatched_count = 0
 	mismatched = map(lambda x,y: (x,y), long_word, short_word)
 	for x in xrange(0,long_length):
@@ -62,6 +73,11 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 		except IndexError:
 			pass
 
+	"""
+	Another measurement of jaro winkler is if the words have a common prefix
+	we count up to a maximum of 4 for the prefix to be added to the weight 
+	formula
+	"""
 	common_prefix_count = 0
 	while common_prefix_count < short_length and common_prefix_count <= 4:
 		if not long_word[common_prefix_count] == short_word[common_prefix_count]:
@@ -69,15 +85,24 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 			
 		common_prefix_count += 1
 
+
+	"""
+	We are finally going to compute the score here! I have modified the original formula
+	to take into account special cases provided
+	"""
 	jarowinkler_score = 0
 	if matches:
+		# I noticed that long words were given precedence since they managed to sometimes grab more
+		# matches based on the distance... I wanted to give a penalty if our
+		# given word has a length difference, the larger the difference the bigger the penalty
 		length_penalty = (long_length - short_length) / float(long_length) 
 
-		# formula: 1/3 (m / len1 + m / len2 + (m - mismatch / m))
+		# original formula: 1/3 (m / len1 + m / len2 + (m - mismatch / m))
 		# I felt mismatch should increase and not decrease a score so mine is modified
 		jaro_score = .333 * (float(matches)/long_length + float(matches)/short_length + 
 			float(mismatched_count)/long_length - length_penalty)
-		
+	
+		# vowel boost rocks a pretty sweet percent increase	
 		if vowel_boost:
 			jaro_score = jaro_score + vowel_match_boost
 
