@@ -4,7 +4,7 @@ import numpy
 from datetime import datetime
 
 VOWELS = ['a','e','i','o','u']
-
+MATCH_THRESHOLD = 0.50
 class timer():
 	def __enter__(self):
 		self.start = datetime.now()
@@ -120,9 +120,9 @@ def main():
 	while 1:
 		if piped_words:
 			try:
-				given_word = piped_words.next().lower()
-				print "> %s" % given_word.replace('\n', '')
-			except StopIteration:
+				given_word = piped_words.next().lower().replace('\n', '')
+				print "> %s" % given_word
+			except StopIteration: # break out of infinite loop to end script if we are given input
 				break
 		else:
 			given_word = raw_input("> ").lower()
@@ -135,17 +135,17 @@ def main():
 		with timer():
 			top3 = []
 			same_word = False
-			match = ('NO SUGGESTION',0.50)
+			match = ('NO SUGGESTION',MATCH_THRESHOLD)
 			for word in open("/usr/share/dict/words"):
-				w = word.replace('\n', '')
+				w = word.replace('\n', '') # 'the /usr/share/dict/words has a \n we dont want'
 				if w:
-					if given_word == w:
+					if given_word == w: # if we found an exact match, use it
 						match = (w,1)
 						break
 					
 					# it is unlikely someone will write a word with both
 					# the last and first letters incorrect, speeds up algo 
-					# by a very large amount	
+					# by a very large amount
 					if given_word[0] == w[0] or given_word[-1] == w[-1]:
 						distance = find_distance(given_word,w)
 

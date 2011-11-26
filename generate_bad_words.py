@@ -34,8 +34,8 @@ def modify_vowel(word):
 	"""
 	index = random.randint(0,len(word) - 1) 
 	if word[index] not in VOWELS:
-		for x in range(0, len(word)):
-			if word[index].lower() in VOWELS: # sometimes the index is capitalized
+		for x in xrange(0, len(word)):
+			if word[x].lower() in VOWELS: # sometimes the index is capitalized
 				index = x
 				break
 
@@ -54,7 +54,7 @@ sample = random.sample(xrange(98000),15)
 words = []
 mutators = [duplicate_char, capitalize_char, modify_vowel]
 for x,word in enumerate(open('/usr/share/dict/words')):
-	if x in sample and word and word != '\n':
+	if x in sample:
 		for m in xrange(random.randint(1,3)):
 			word = mutators[random.randint(0,2)](word)
 		words.append(word)
