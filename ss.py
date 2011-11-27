@@ -5,6 +5,10 @@ from datetime import datetime
 
 VOWELS = ['a','e','i','o','u']
 MATCH_THRESHOLD = 0.50
+LO_BOOST = .05
+MID_BOOST = .075
+HI_BOOST = .1
+
 class timer():
 	def __enter__(self):
 		self.start = datetime.now()
@@ -13,7 +17,7 @@ class timer():
 		print "Search took: %s.%ss" % (delta.seconds, delta.microseconds)
 
 # Using the Jaro-Winkler Distance algorithm as a base template
-def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
+def find_distance(first,second,standard_weight=0.1,special_match_boost=0.35):
 	len1 = len(first)
 	len2 = len(second)
 	
@@ -32,7 +36,7 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 	+-match_distance amount of indices in the shorter string to 
 	see if it shows up, if it does, add to the matched count
 	"""
-	matches = 0
+	matches = 0.0
 	# modified from the formula, orginally (l_length / 2) - 1. I found this favored long words too much.
 	match_distance = long_length / 2 
 	for x, ch_f in enumerate(long_word):
@@ -64,9 +68,11 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 	Part of the jaro winkler algorithm is that mismatched pairs
 	hold a weight as well. For example, hlep -> help where
 	le and el are a mismatched pair. We count these for use later.
+
+	Also disregard a one letter word when it comes to mismatches
 	"""
 	mismatched_count = 0
-	mismatched = map(lambda x,y: (x,y), long_word, short_word)
+	mismatched = zip(long_word, short_word)
 	for x in xrange(0,long_length):
 		try:
 			if mismatched[x] == (mismatched[x+1][1],mismatched[x+1][0]):
@@ -86,7 +92,6 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 			
 		common_prefix_count += 1
 
-
 	"""
 	We are finally going to compute the score here! I have modified the original formula
 	to take into account special cases provided
@@ -96,20 +101,22 @@ def find_distance(first,second,standard_weight=0.1,vowel_match_boost=0.35):
 		# I noticed that long words were given precedence since they managed to sometimes grab more
 		# matches based on the distance... I wanted to give a penalty if our
 		# given word has a length difference, the larger the difference the bigger the penalty
-		length_penalty = (long_length - short_length) / float(long_length) 
+		length_penalty = (long_length - short_length) / float(long_length)
 
 		# original formula: 1/3 (m / len1 + m / len2 + (m - mismatch / m))
-		# I felt mismatch should increase and not decrease a score so mine is modified
-		jaro_score = .333 * (float(matches)/long_length + float(matches)/short_length + 
-			float(mismatched_count)/long_length - length_penalty)
-	
-		# vowel boost rocks a pretty sweet percent increase	
-		if vowel_boost:
-			jaro_score = jaro_score + vowel_match_boost
+		jaro_score = .333 * (matches / long_length + matches / short_length + 
+			mismatched_count / long_length - length_penalty)
 
 		# here we update the jaro score to take into account a common prefix
 		jarowinkler_score = jaro_score + (common_prefix_count * standard_weight * (1 - jaro_score))
-	
+
+		# If the first and last letter match we should boost that word match if it has a good score already
+		if first[0] == second[0] and first[-1] == second[-1] and jarowinkler_score > MATCH_THRESHOLD:
+			jarowinkler_score = jarowinkler_score + LO_BOOST
+
+		if vowel_boost:
+			jarowinkler_score = jaro_score + special_match_boost
+		
 	return jarowinkler_score
 
 def main():
@@ -146,27 +153,21 @@ def main():
 					# it is unlikely someone will write a word with both
 					# the last and first letters incorrect, speeds up algo 
 					# by a very large amount
-					if given_word[0] == w[0] or given_word[-1] == w[-1]:
+					first_and_last_check = given_word[0] == w[0] or given_word[-1] == w[-1]
+
+					# if an apostrophe doesn't show up in the given word
+					# don't use it to check against in the dictionary
+					apostrophe_check = '\'' not in given_word and '\'' in w
+
+					one_letter_check = len(w) == 1 and len(given_word) > 1
+
+					if first_and_last_check and not apostrophe_check and not one_letter_check:
 						distance = find_distance(given_word,w)
 
 						if match[1] < distance:
 							match = (w,distance)
-						"""
-						if len(top3) < 3:
-							top3.append((w,distance))
-						else:
-							for x in xrange(0,len(top3)):
-								if distance > top3[x][1]:
-									top3.insert(x, (w,distance))
-									top3.pop(x+1)
-									break
-						"""
+
 		print match[0]
-		"""
-		top3.sort(key=lambda x: x[1],reverse=True)
-		for t in top3:
-			print t[0],t[1]
-		"""
 
 if __name__ == "__main__":
 	try:
