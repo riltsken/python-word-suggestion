@@ -1,4 +1,4 @@
-Rquires Python2.6+
+Requires Python2.6+
 This is a just for fun project. Not meant to be used in any type of production setting.
 
 ./generate_bad_words.py | ./ss.py
