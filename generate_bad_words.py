@@ -55,9 +55,11 @@ words = []
 mutators = [duplicate_char, capitalize_char, modify_vowel]
 for x,word in enumerate(open('/usr/share/dict/words')):
 	if x in sample:
-		for m in xrange(random.randint(1,3)):
-			word = mutators[random.randint(0,2)](word)
-		words.append(word)
+		original = word
+		while (word == original):
+			for m in xrange(random.randint(1,3)):
+				word = mutators[random.randint(0,2)](word)
+			words.append(word)
 
 words[-1] = words[-1].replace('\n', '')
 print ''.join(words)

@@ -127,8 +127,9 @@ def main():
 	while 1:
 		if piped_words:
 			try:
-				given_word = piped_words.next().lower().replace('\n', '')
+				given_word = piped_words.next().replace('\n', '')
 				print "> %s" % given_word
+				given_word = given_word.lower()
 			except StopIteration: # break out of infinite loop to end script if we are given input
 				break
 		else:
