@@ -66,7 +66,7 @@ def clean_duplicate_chars(word):
 
 		return matches
 
-def permutate_vowels(matches):
+def vowel_product(matches):
 
 	""" 
 	find the product of all all vowels based on
@@ -134,13 +134,13 @@ def main():
 
 			if match == FAIL:
 				# it is faster to check every word in the dupe list before creating the permutations and then searching through them
-				permutated_vowel_matches = permutate_vowels(dupe_fix_matches)
+				vowel_product_matches = vowel_product(dupe_fix_matches)
 				for word in open("/usr/share/dict/words"):
 					w = word.replace('\n', '') 
 					if w:
 						if len(w) in length_requirement: 
 							# line up all possible vowel matches
-							for m in permutated_vowel_matches:
+							for m in vowel_product_matches:
 								if m == w:
 									match = w
 									break
